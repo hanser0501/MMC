@@ -1,0 +1,9 @@
+# .gitignore 内容示例（适用于 Python 项目）
+.venv/
+venv/
+env/
+*.pyc
+__pycache__/
+*.egg-info/
+dist/
+build/
