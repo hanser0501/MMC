@@ -6,7 +6,7 @@ import sys
 plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'STHeiti']
 plt.rcParams['axes.unicode_minus'] = False
 
-from dispatch_sim import (
+from sim_dispatch import (
     simulate_dispatch_from_nij
 )
 

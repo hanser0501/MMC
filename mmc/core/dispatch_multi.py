@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'STHeiti']
 plt.rcParams['axes.unicode_minus'] = False
 
-from dispatch_sim_multi import (
+from sim_dispatch_multi import (
     multi_vehicle_dispatch,
     plot_vehicle_routes
 )
@@ -25,6 +25,7 @@ df_result = multi_vehicle_dispatch(
     max_steps=5
 )
 
-# 保存结果
-df_result.to_excel(r"D:\MMC\mmc\data\dispatch_result_multi.xlsx", index=False)
-plot_vehicle_routes(df_result, coord_file=r"D:\MMC\mmc\data\points.xlsx")
+result_path = r"D:\MMC\mmc\data\dispatch_result_multi.xlsx"
+coord_file = r"D:\MMC\mmc\data\points.xlsx"
+df_result.to_excel(result_path, index=False)
+plot_vehicle_routes(df_result, coord_file)
