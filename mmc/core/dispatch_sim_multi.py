@@ -3,7 +3,7 @@ from typing import List, Dict, Tuple
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
-
+# 多车调度模型
 MAX_CAPACITY = 20
 
 def select_starting_points(bike_counts: Dict[str, int], vehicles: List[Dict], df_distance: pd.DataFrame):
@@ -61,8 +61,7 @@ def calculate_nij_matrix(
                 # 多车情况下选择最优Nc（使nij最大）
                 best_nij = -float('inf')
                 for Nc in Nc_list:
-                    # 核心公式：距离 + 供需差 + 容量因子
-                    nij = a/tij + b*(Ni-Nj)/25 + c*(2*Nj/(Nc+0.001))/25
+                    nij = a/tij + b*(Nc-Nj)/25 + c*(2*Nj/(Nc+0.001))/25
                     if nij > best_nij:
                         best_nij = nij
                 
@@ -94,9 +93,8 @@ def perform_dispatch(
         (更新后的Nc, 取车数量, 卸车数量)
     """
     moved_out = moved_in = 0
-    can_pickup = Nc < MAX_CAPACITY  # 车辆是否能取车
+    can_pickup = Nc < MAX_CAPACITY
     
-    # 从i站操作
     if can_pickup and bike_counts[i] > 0:  # 取车
         moved_out = min(bike_counts[i], MAX_CAPACITY - Nc)
         bike_counts[i] -= moved_out
@@ -106,7 +104,6 @@ def perform_dispatch(
         bike_counts[i] += moved_in
         Nc -= moved_in
     
-    # 从j站操作
     if can_pickup and bike_counts[j] > 0:
         moved_out = min(bike_counts[j], MAX_CAPACITY - Nc)
         bike_counts[j] -= moved_out
@@ -128,7 +125,9 @@ def multi_vehicle_dispatch(
     b: float = 0.2,
     c: float = 0.2
 ) -> pd.DataFrame:
-    """多车协同调度主函数"""
+    """多车协同调度主函数
+    对于a, b, c参数，这里不再设限制，可以根据实际情况调整
+    """
     
     # 初始化车辆状态
     vehicles = [
@@ -136,7 +135,6 @@ def multi_vehicle_dispatch(
         for k in range(num_vehicles)
     ]
     
-    # 第一步：为每辆车选定合理的起点并动态计算初始载量
     select_starting_points(bike_counts, vehicles, df_distance)
     
     all_routes = []
@@ -145,11 +143,10 @@ def multi_vehicle_dispatch(
     while step < max_steps:
         step += 1
         
-        # 激活所有未满载或可卸车的车辆
         active_vehicles = [v for v in vehicles if (v["Nc"] < MAX_CAPACITY) or (v["Nc"] > 0)]
         
         if not active_vehicles:
-            break  # 如果没有需要调度的车辆，结束调度
+            break
         
         # 计算全局优先级
         Nc_list = [v["Nc"] for v in vehicles]
@@ -169,23 +166,22 @@ def multi_vehicle_dispatch(
             if not valid_pairs:
                 continue
             
-            # 选择优先级最高的任务
             best_pair = valid_pairs[0]
             i, j = best_pair["from"], best_pair["to"]
             
             # 执行调度
             Nc_new, moved_out, moved_in = perform_dispatch(i, j, vehicle["Nc"], bike_counts)
             print(f"车辆{vehicle['id']}调度：{i} -> {j}, moved_in： {moved_in}，Nc_new：{Nc_new}")
-            # 更新车辆状态
             vehicle["Nc"] = Nc_new
             vehicle["location"] = j
             vehicle["route"].append({
                 "step": step,
-                "from": i, "to": j,
+                "from": i, 
                 "moved_out": moved_out,
+                "to": j,
                 "moved_in": moved_in,
                 "Nc_after": vehicle["Nc"],
-                "nij_score": best_pair["nij"]
+                "nij": best_pair["nij"]
             })
     
     # 整理所有车辆的调度记录
@@ -207,11 +203,9 @@ def plot_vehicle_routes(df_routes, coord_file):
     - df_routes: 调度记录 DataFrame，包含 vehicle_id、from、to 等字段
     - coord_file: 坐标 Excel 文件路径，包含 name, x, y 三列
     """
-    # 读取坐标信息
     df_coords = pd.read_excel(coord_file)
     df_coords.set_index("name", inplace=True)
 
-    # 获取所有调度中实际经过的站点名
     used_points = set(df_routes['from']).union(set(df_routes['to']))
     df_coords_filtered = df_coords.loc[df_coords.index.intersection(used_points)]
 
@@ -230,7 +224,6 @@ def plot_vehicle_routes(df_routes, coord_file):
         
         plt.plot(x_vals, y_vals, marker='o', label=f"Vehicle {vehicle_id}")
 
-    # 标注点名
     for name, row in df_coords_filtered.iterrows():
         plt.text(row["x"] + 10, row["y"] + 10, name, fontsize=8)
 

@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'STHeiti']
 plt.rcParams['axes.unicode_minus'] = False
 
-from dispatch_sim_tri import (
+from dispatch_sim_multi import (
     multi_vehicle_dispatch,
     plot_vehicle_routes
 )
@@ -13,7 +13,7 @@ distance_file = r"D:\MMC\mmc\data\shortest_matrix.xlsx"
 count_file = r"D:\MMC\mmc\data\points_number.xlsx"
 
 df_distance = pd.read_excel(distance_file, index_col=0)
-df_counts = pd.read_excel(count_file, sheet_name="Sheet2")
+df_counts = pd.read_excel(count_file, sheet_name="Sheet3")
 df_counts = df_counts[pd.to_numeric(df_counts["count"], errors='coerce').notnull()]
 bike_counts = dict(zip(df_counts['location'], df_counts['count']))
 
